@@ -186,13 +186,16 @@ Flask Application
        ▼
 AWS RDS MySQL Database
 
+
 Workflow
 Users access BloodBridge through a web browser.
 Requests are handled by the Flask application hosted on AWS EC2.
 Business logic is processed using Flask and SQLAlchemy.
 Data is stored and retrieved from AWS RDS MySQL.
 Results are displayed through dynamic dashboards.
+
 🗄️ Database Design
+
 Table	Purpose
 Users	Authentication & Authorization
 Donors	Donor Information
@@ -217,11 +220,17 @@ BloodBridge/
 ├── static/
 ├── templates/
 └── uploads/
+
+```
+--- 
 📸 Project Screenshots
+<img width="1920" height="1080" alt="Screenshot 2026-06-03 154517" src="https://github.com/user-attachments/assets/fdb77770-7855-4b19-99ca-b80c692cc1f6" />
+<img width="1920" height="1080" alt="Screenshot 2026-06-03 154643" src="https://github.com/user-attachments/assets/ecccbbed-345f-4a66-8d42-2155d3b1c4c1" />
 
-(Add actual screenshots here)
+---
 
-🎁 Benefits & Advantages
+---
+## 🎁 Benefits & Advantages
 Hospitals
 Faster emergency response
 Better patient management
@@ -239,7 +248,10 @@ Cloud Hosted
 Scalable Architecture
 Secure Authentication
 High Availability
-🔮 Future Scope
+---
+
+---
+##🔮 Future Scope
 Phase 2
 Mobile Application
 AI Demand Prediction
@@ -255,13 +267,21 @@ National Blood Grid
 Ambulance Integration
 SMS & Email Alerts
 Government Health Integration
-📝 Conclusion
+
+--- 
+
+---
+##📝 Conclusion
 
 BloodBridge demonstrates how cloud computing and modern web technologies can transform blood resource management. By integrating hospitals, donors, and blood banks into a unified ecosystem, the platform significantly improves response times, operational efficiency, and blood availability during emergencies.
 
 The solution is scalable, secure, and production-ready, making it suitable for deployment across healthcare organizations and blood donation networks.
 
-👨‍💻 Developer
+---
+
+---
+
+###👨‍💻 Developer
 Siddhesh Patil
 
 Full Stack Developer | Cloud Enthusiast | AWS Practitioner
@@ -271,19 +291,5 @@ AWS EC2 & RDS Deployment
 Database Design
 RESTful Applications
 Cloud Infrastructure
-📄 License
 
-This project is licensed under the MIT License.
-
-🙏 Acknowledgements
-AWS Free Tier
-Flask Community
-SQLAlchemy Community
-Bootstrap Team
-Chart.js Contributors
-<div align="center">
-🩸 Every Drop Counts – Save Lives with BloodBridge 🩸
-
-Built with Python Flask • Hosted on AWS EC2 • Database on AWS RDS
-
-</div> ```
+---
