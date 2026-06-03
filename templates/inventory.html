@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}Inventory Management{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-warehouse"></i> Blood Inventory Management
+                <button class="btn btn-sm btn-light float-end" onclick="location.reload()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Blood Type</th>
+                                    <th>Current Stock (Units)</th>
+                                    <th>Critical Threshold</th>
+                                    <th>Status</th>
+                                    <th>Last Updated</th>
+                                    <th>Update Quantity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in inventory %}
+                                <tr class="{% if item.quantity_units < item.critical_threshold %}table-danger{% endif %}">
+                                    <td>
+                                        <strong class="text-danger">{{ item.blood_type }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold {% if item.quantity_units < item.critical_threshold %}text-danger{% else %}text-success{% endif %}">
+                                            {{ item.quantity_units }}
+                                        </span>
+                                    </td>
+                                    <td>{{ item.critical_threshold }} units</td>
+                                    <td>
+                                        {% if item.quantity_units == 0 %}
+                                            <span class="badge bg-danger">Out of Stock</span>
+                                        {% elif item.quantity_units < item.critical_threshold %}
+                                            <span class="badge bg-warning text-dark">Critical Shortage</span>
+                                        {% elif item.quantity_units < item.critical_threshold * 2 %}
+                                            <span class="badge bg-info">Low Stock</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Adequate</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small>{{ item.last_updated.strftime('%Y-%m-%d %H:%M') if item.last_updated else 'Never' }}</small>
+                                    </td>
+                                    <td>
+                                        <input type="number" 
+                                               name="quantity_{{ item.blood_type.replace('+', '_plus').replace('-', '_minus') }}" 
+                                               class="form-control form-control-sm" 
+                                               style="width: 100px; display: inline-block;"
+                                               value="{{ item.quantity_units }}" 
+                                               min="0">
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update All Inventory
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="setRecommendedLevels()">
+                            <i class="fas fa-magic"></i> Set Recommended Levels
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-chart-pie"></i> Inventory Distribution
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="inventoryPieChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-exclamation-triangle"></i> Shortage Alerts
+            </div>
+            <div class="card-body">
+                <div id="shortageAlerts">
+                    {% for item in inventory if item.quantity_units < item.critical_threshold %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-tint"></i>
+                            <strong>{{ item.blood_type }}</strong> is critically low!
+                            Current: {{ item.quantity_units }} units | 
+                            Minimum required: {{ item.critical_threshold }} units
+                            <progress class="progress mt-2" value="{{ (item.quantity_units / item.critical_threshold * 100) if item.quantity_units < item.critical_threshold else 100 }}" max="100" aria-label="Stock level">
+                                {{ (item.quantity_units / item.critical_threshold * 100) if item.quantity_units < item.critical_threshold else 100 }}%
+                            </progress>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i>
+                            All blood types have adequate inventory levels!
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="inventory-data"
+     data-labels="{{ inventory | map(attribute='blood_type') | list | tojson | safe }}"
+     data-values="{{ inventory | map(attribute='quantity_units') | list | tojson | safe }}"
+     style="display: none;"></div>
+
+<script>
+function setRecommendedLevels() {
+    const recommended = {
+        'A+': 25, 'A-': 12, 'B+': 20, 'B-': 10,
+        'AB+': 8, 'AB-': 5, 'O+': 35, 'O-': 20
+    };
+    
+    for (const [bloodType, quantity] of Object.entries(recommended)) {
+        const inputName = `quantity_${bloodType.replace('+', '_plus').replace('-', '_minus')}`;
+        const input = document.querySelector(`input[name="${inputName}"]`);
+        if (input) {
+            input.value = quantity;
+        }
+    }
+    
+    showNotification('Success', 'Recommended levels have been set', 'success');
+}
+
+// Create pie chart
+document.addEventListener('DOMContentLoaded', function() {
+    const inventoryLabels = JSON.parse(document.getElementById('inventory-data').dataset.labels);
+    const inventoryValues = JSON.parse(document.getElementById('inventory-data').dataset.values);
+    const ctx = document.getElementById('inventoryPieChart').getContext('2d');
+    
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: inventoryLabels,
+            datasets: [{
+                data: inventoryValues,
+                backgroundColor: [
+                    '#dc3545', '#fd7e14', '#ffc107', '#28a745',
+                    '#20c997', '#17a2b8', '#6f42c1', '#e83e8c'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return `${label}: ${value} units (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+
+function showNotification(title, message, type) {
+    const toastContainer = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} alert-dismissible fade show`;
+    toast.innerHTML = `
+        <strong>${title}</strong> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    toastContainer.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-lg">
+            <div class="card-header bg-gradient-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-bell fa-lg me-2"></i>
+                        <strong>Notifications Center</strong>
+                    </div>
+                    <div>
+                        {% if notifications %}
+                        <button class="btn btn-sm btn-light" onclick="markAllRead()">
+                            <i class="fas fa-check-double"></i> Mark All Read
+                        </button>
+                        {% endif %}
+                        <button class="btn btn-sm btn-outline-light ms-2" onclick="refreshNotifications()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                {% if notifications %}
+                    <div class="notification-list">
+                        {% for notification in notifications %}
+                        <div class="notification-item {% if not notification.is_read %}unread{% endif %}" data-id="{{ notification.id }}">
+                            <div class="notification-icon">
+                                {% if 'Emergency' in notification.title or 'emergency' in notification.title.lower() %}
+                                    <i class="fas fa-ambulance text-danger"></i>
+                                {% elif 'Request' in notification.title or 'request' in notification.title.lower() %}
+                                    <i class="fas fa-tasks text-info"></i>
+                                {% elif 'Donation' in notification.title or 'donation' in notification.title.lower() %}
+                                    <i class="fas fa-tint text-success"></i>
+                                {% elif 'Shortage' in notification.title or 'shortage' in notification.title.lower() %}
+                                    <i class="fas fa-exclamation-triangle text-warning"></i>
+                                {% elif 'Welcome' in notification.title %}
+                                    <i class="fas fa-smile-wink text-primary"></i>
+                                {% else %}
+                                    <i class="fas fa-bell text-secondary"></i>
+                                {% endif %}
+                            </div>
+                            <div class="notification-content">
+                                <div class="notification-header">
+                                    <strong class="notification-title">{{ notification.title }}</strong>
+                                    <small class="notification-time text-muted">
+                                        <i class="far fa-clock me-1"></i>
+                                        {{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                    </small>
+                                </div>
+                                <p class="notification-message mb-1">{{ notification.message }}</p>
+                                {% if not notification.is_read %}
+                                    <button class="btn btn-sm btn-link p-0 mark-read-btn" data-id="{{ notification.id }}">
+                                        <i class="fas fa-check-circle"></i> Mark as read
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <div class="empty-state">
+                            <i class="fas fa-bell-slash fa-4x text-muted mb-3"></i>
+                            <h4 class="text-muted">No Notifications</h4>
+                            <p class="text-muted">You're all caught up! Check back later for updates.</p>
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-primary mt-3">
+                                <i class="fas fa-tachometer-alt"></i> Back to Dashboard
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // attach click handlers for mark-read buttons (avoid inline onclick to prevent template/parser issues)
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.mark-read-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var id = this.getAttribute('data-id');
+                if (typeof markRead === 'function') {
+                    markRead(id);
+                }
+            });
+        });
+    });
+function markRead(notificationId) {
+    fetch(`/api/mark_notification_read/${notificationId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    }).then(response => response.json())
+      .then(data => {
+          if (data.success) {
+              // Update the notification item style
+              const notificationItem = document.querySelector(`.notification-item[data-id="${notificationId}"]`);
+              if (notificationItem) {
+                  notificationItem.classList.remove('unread');
+                  const markBtn = notificationItem.querySelector('.mark-read-btn');
+                  if (markBtn) markBtn.remove();
+              }
+              
+              // Update notification count
+              updateNotificationCount();
+              
+              // Show success message
+              showToast('Marked as read', 'success');
+          }
+      });
+}
+
+function markAllRead() {
+    const unreadButtons = document.querySelectorAll('.mark-read-btn');
+    if (unreadButtons.length === 0) {
+        showToast('No unread notifications', 'info');
+        return;
+    }
+    
+    let completed = 0;
+    unreadButtons.forEach(btn => {
+        const match = btn.getAttribute('onclick').match(/\d+/);
+        if (match) {
+            fetch(`/api/mark_notification_read/${parseInt(match[0])}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            }).then(() => {
+                completed++;
+                if (completed === unreadButtons.length) {
+                    location.reload();
+                }
+            });
+        }
+    });
+}
+
+function refreshNotifications() {
+    location.reload();
+}
+
+function updateNotificationCount() {
+    fetch('/api/unread_notifications_count')
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.getElementById('notification-count');
+            if (badge) {
+                if (data.count > 0) {
+                    badge.innerText = data.count;
+                    badge.style.display = 'inline-block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        });
+}
+
+function showToast(message, type) {
+    const toastContainer = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} alert-dismissible fade show`;
+    toast.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    toastContainer.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
+// Auto-refresh notifications every 30 seconds
+setInterval(updateNotificationCount, 30000);
+</script>
+
+<style>
+.notification-list {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    display: flex;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.notification-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
+}
+
+.notification-item.unread {
+    background: linear-gradient(90deg, #fff3e0 0%, #ffffff 100%);
+    border-left: 4px solid #ff9800;
+}
+
+.notification-icon {
+    flex-shrink: 0;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-right: 1rem;
+}
+
+.notification-content {
+    flex: 1;
+}
+
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.notification-title {
+    font-size: 1rem;
+    color: #2c3e50;
+}
+
+.notification-time {
+    font-size: 0.75rem;
+}
+
+.notification-message {
+    color: #6c757d;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.mark-read-btn {
+    font-size: 0.75rem;
+    color: #007bff;
+    padding: 0;
+    margin-top: 0.25rem;
+}
+
+.mark-read-btn:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+.empty-state {
+    padding: 3rem;
+}
+
+.empty-state i {
+    opacity: 0.5;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+</style>
+{% endblock %}

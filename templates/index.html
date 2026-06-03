@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Save Lives{% endblock %}
+
+{% block content %}
+<div class="hero-section text-center">
+    <div class="container">
+        <h1 class="display-3 fw-bold mb-4">
+            <i class="fas fa-tint me-3"></i>BloodBridge
+        </h1>
+        <p class="lead mb-4">Connecting blood donors with hospitals to save lives</p>
+        {% if not current_user.is_authenticated %}
+        <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+            <a href="{{ url_for('register') }}" class="btn btn-light btn-lg px-4">
+                <i class="fas fa-user-plus"></i> Become a Donor
+            </a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg px-4">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </a>
+        </div>
+        {% else %}
+        <a href="{{ url_for('dashboard') }}" class="btn btn-light btn-lg px-4">
+            <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="container">
+    <div class="row g-4 mt-4">
+        <div class="col-md-4">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-tint feature-icon"></i>
+                    <h3>24/7 Availability</h3>
+                    <p>Real-time blood inventory tracking across all blood types</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-ambulance feature-icon"></i>
+                    <h3>Emergency Response</h3>
+                    <p>Instant emergency request system for critical situations</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-chart-line feature-icon"></i>
+                    <h3>Smart Analytics</h3>
+                    <p>AI-powered donation trends and shortage predictions</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-chart-bar"></i> Current Blood Stock Levels
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="height: 400px;">
+                        <canvas id="homeInventoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-5">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-info-circle"></i> Why Donate Blood?
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i> One donation can save up to 3 lives</li>
+                        <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i> Blood cannot be manufactured - only donated</li>
+                        <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i> Every 2 seconds, someone needs blood</li>
+                        <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i> It's safe, easy, and rewarding</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-question-circle"></i> Eligibility Criteria
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="fas fa-heart text-danger me-2"></i> Age: 18-65 years</li>
+                        <li class="mb-2"><i class="fas fa-heart text-danger me-2"></i> Weight: ≥ 50 kg (110 lbs)</li>
+                        <li class="mb-2"><i class="fas fa-heart text-danger me-2"></i> Good general health</li>
+                        <li class="mb-2"><i class="fas fa-heart text-danger me-2"></i> No major illnesses in last 6 months</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/inventory')
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('homeInventoryChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(d => d.blood_type),
+                    datasets: [{
+                        label: 'Available Units',
+                        data: data.map(d => d.quantity),
+                        backgroundColor: data.map(d => d.quantity < d.critical_threshold ? '#dc3545' : '#28a745'),
+                        borderRadius: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' }
+                    }
+                }
+            });
+        });
+});
+</script>
+{% endblock %}

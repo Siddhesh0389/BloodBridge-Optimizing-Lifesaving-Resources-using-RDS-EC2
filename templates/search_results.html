@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-search"></i> Search Results for "{{ query }}"
+                <span class="badge bg-secondary float-end">{{ results|length }} results found</span>
+            </div>
+            <div class="card-body">
+                {% if results %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Details</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for result in results %}
+                                <tr>
+                                    <td>
+                                        {% if result.patient_name %}
+                                            <i class="fas fa-ambulance text-danger"></i> Emergency
+                                        {% else %}
+                                            <i class="fas fa-tint text-success"></i> Donation
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <strong>Blood Type:</strong> {{ result.blood_type }}<br>
+                                        {% if result.patient_name %}
+                                            <strong>Patient:</strong> {{ result.patient_name }}
+                                            {% if result.patient_age %}
+                                                (Age: {{ result.patient_age }})
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if result.status %}
+                                            <span class="badge bg-{{ 'warning' if result.status == 'pending' else 'success' if result.status == 'fulfilled' else 'secondary' }}">
+                                                {{ result.status }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ result.request_date.strftime('%Y-%m-%d') if result.request_date else result.scheduled_date }}</td>
+                                    <td>
+                                        <a href="{{ url_for('dashboard') }}" class="btn btn-sm btn-primary">
+                                            View Details
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-search fa-4x text-muted mb-3"></i>
+                        <h4>No results found for "{{ query }}"</h4>
+                        <p class="text-muted">Try searching with different keywords</p>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                            Back to Dashboard
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
