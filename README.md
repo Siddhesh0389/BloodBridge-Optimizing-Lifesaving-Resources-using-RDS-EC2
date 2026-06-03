@@ -228,30 +228,22 @@ BloodBridge/
 <img width="1920" height="1080" alt="Screenshot 2026-06-03 154643" src="https://github.com/user-attachments/assets/ecccbbed-345f-4a66-8d42-2155d3b1c4c1" />
 
 ---
-
----
 ## 🎁 Benefits & Advantages
-Hospitals
-Faster emergency response
-Better patient management
-Centralized request tracking
-Blood Banks
-Improved inventory visibility
-Reduced blood wastage
-Efficient request fulfillment
-Donors
-Easy donation scheduling
-Donation impact tracking
-Faster emergency participation
-Technical Benefits
-Cloud Hosted
-Scalable Architecture
-Secure Authentication
-High Availability
+
+- Hospitals Faster emergency response
+- Better patient management
+- Centralized request tracking
+- Blood Banks
+- Improved inventory visibility
+- Reduced blood wastage
+- Efficient request fulfillment
+- Donors Easy donation scheduling
+- Donation impact tracking
+- Faster emergency participation
+- High Availability
 ---
 
----
-##🔮 Future Scope
+## 🔮 Future Scope
 Phase 2
 Mobile Application
 AI Demand Prediction
@@ -270,8 +262,7 @@ Government Health Integration
 
 --- 
 
----
-##📝 Conclusion
+## 📝 Conclusion
 
 BloodBridge demonstrates how cloud computing and modern web technologies can transform blood resource management. By integrating hospitals, donors, and blood banks into a unified ecosystem, the platform significantly improves response times, operational efficiency, and blood availability during emergencies.
 
@@ -279,9 +270,7 @@ The solution is scalable, secure, and production-ready, making it suitable for d
 
 ---
 
----
-
-###👨‍💻 Developer
+### 👨‍💻 Developer
 Siddhesh Patil
 
 Full Stack Developer | Cloud Enthusiast | AWS Practitioner
